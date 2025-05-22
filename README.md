@@ -16,9 +16,24 @@ TXYZ implements a custodial wallet standard with HSM-backed transaction signing 
 
 
 ```mermaid
-flowchart LR
+sequenceDiagram
+    participant Client
+    participant HSM as HSM Server
+    participant Blockchain
 
-A --> B
+    Note over Client: Client-Side
+    Client->>Client: 1. Create unsigned transaction
+    Client->>HSM: 2. Submit for signing
+    
+    Note over HSM: Server-Side (HSM)
+    HSM->>HSM: 3. Validate request
+    HSM->>HSM: 4. Sign transaction securely
+    HSM->>Client: 5. Return signed payload
+    
+    Note over Client: Client-Side
+    Client->>Client: 6. Receive signed transaction
+    Client->>Blockchain: 7. Broadcast to blockchain
+    Blockchain-->>Client: Transaction hash
 ```
 
 
