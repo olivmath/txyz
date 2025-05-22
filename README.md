@@ -4,11 +4,11 @@ TXYZ implements a custodial wallet standard with HSM-backed transaction signing 
 
 ## Enterprise-Grade Custody Features
 
-🏛️ Certified key escrow architectures
-🤝 Service-to-service integration patterns
-🧩 Modular policy engine for compliance
-⚡ Developer-first API design
-🔋 Built on modern [viem](https://viem.sh) primitives
+- 🏛️ Certified key escrow architectures
+- 🤝 Service-to-service integration patterns
+- 🧩 Modular policy engine for compliance
+- ⚡ Developer-first API design
+- 🔋 Built on modern [viem](https://viem.sh) primitives
 
 ---
 
