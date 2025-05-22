@@ -36,18 +36,6 @@ sequenceDiagram
     Blockchain-->>Client: Transaction hash
 ```
 
-
-### Client-Side
-1. Create unsigned transaction
-2. Submit to HSM for signing
-3. Receive again signed transaction
-4. Broadcast to blockchain
-
-### Server-Side (HSM)
-1. Validate incoming request
-2. Sign transaction securely
-3. Return signed payload
-
 ---
 
 ## **Installation**
@@ -65,12 +53,12 @@ pnpm add txyz
 ### 1. Initialize Client
 ```ts
 import { createTxyzClient } from 'txyz';
-import { http } from 'viem';
+import { websocket } from 'viem';
 
 const txyz = createTxyzClient({
-  hsmUrl: 'ws://my-hsm-server.com',
+  transport: websocket('wss://eth.llamarpc.com')
+  hsmWsEndpoint: 'wss://your-hsm.example.com',
   chain: 'mainnet',
-  viemTransport: ws('ws://my-hsm-server.com')
 });
 ```
 
@@ -80,13 +68,12 @@ const txHash = await txyz.sendTx({
   abi: erc20Abi,
   to: '0xTokenAddress',
   functionName: 'transfer',
-  args: ['0xRecipient', BigInt(1000 * 1e18)],
+  args: ['0xRecipient', 1000n * 10n**18n], // BigInt literal
   from: '0xSenderAddress'
 });
-```
 
-**Automated Flow:**  
-① Create raw transaction → ② HSM signing → ③ Broadcast → ④ Return TX hash
+console.log('Transaction hash:', txHash);
+```
 
 ---
 
@@ -94,24 +81,25 @@ const txHash = await txyz.sendTx({
 
 ### Basic Signing Endpoint
 ```ts
-import express from 'express';
+import WebSocket from 'ws';
 import { privateKeyToAccount } from 'viem/accounts';
 
-const app = express();
-app.use(express.json());
+const wss = new WebSocket.Server({ port: 8080 });
+const signer = privateKeyToAccount('0xYOUR_SECURE_KEY');
 
-const secureSigner = privateKeyToAccount('0xYOUR_PRIVATE_KEY');
-
-app.post('/sign', async (req, res) => {
-  try {
-    const signed = await secureSigner.signTransaction(req.body.unsignedTx);
-    res.json({ signedTx: signed });
-  } catch (error) {
-    res.status(500).json({ error: 'Signing failed' });
-  }
+wss.on('connection', (ws) => {
+  ws.on('message', async (message) => {
+    try {
+      const { id, unsignedTx } = JSON.parse(message.toString());
+      const signedTx = await signer.signTransaction(unsignedTx);
+      ws.send(JSON.stringify({ id, signedTx }));
+    } catch (error) {
+      ws.send(JSON.stringify({ error: 'Signing failed' }));
+    }
+  });
 });
 
-app.listen(3000, () => console.log('HSM active on port 3000'));
+console.log('HSM WebSocket running on ws://localhost:8080');
 ```
 
 ---
